@@ -1,9 +1,5 @@
-from functools import partial, wraps
+from functools import partial
 from typing import *
-import time
-from contextlib import contextmanager
-import os
-import random
 
 
 class Infix(object):
