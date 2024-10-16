@@ -72,11 +72,11 @@ class Vector2:
     def __add__(self, other: Self) -> Self:
         return Vector2(self.x + other.x, self.y + other.y)
 
+    def __mul__(self, other: Self) -> Self:
+        return Vector2(self.x * other.x, self.y * other.y)
+
     def __sub__(self, other: Self) -> Self:
         return Vector2(self.x - other.x, self.y - other.y)
-
-    def __mul__(self, other: float) -> Self:
-        return Vector2(self.x * other, self.y * other)
 
     def normalize(self) -> Self:
         return Vector2(self.x / self.length, self.y / self.length)
@@ -101,31 +101,16 @@ class Vector3:
     def __sub__(self, other: Self) -> Self:
         return Vector3(self.x - other.x, self.y - other.y, self.z - other.z)
 
-    def __mul__(self, other: float) -> Self:
-        return Vector3(self.x * other, self.y * other, self.z * other)
+    def __mul__(self, other: Self) -> Self:
+        return Vector3(self.x * other.x, self.y * other.y, self.z * other.z)
 
     def normalize(self) -> Self:
         return Vector3(self.x / self.length, self.y / self.length, self.z / self.length)
 
 
-def dot(a: Vector2 | Vector3,
-        b: Vector2 | Vector3) -> Vector2 | Vector3:
-    if isinstance(a, Vector2) and isinstance(b, Vector2):
-        return Vector2(a.x * b.x, a.y * b.y)
-    elif isinstance(a, Vector3) and isinstance(b, Vector3):
-        return Vector3(a.x * b.x, a.y * b.y, a.z * b.z)
-    else:
-        raise TypeError("Cannot multiply Vector 2 and Vector 3")
-
-
 def cross(a: Vector2 | Vector3,
           b: Vector2 | Vector3) -> Vector3 | float:
-    if (isinstance(a, Vector2)) and (isinstance(b, Vector2)):
-        return (a.x * b.y) - (a.y * b.x)
-    elif isinstance(a, Vector3) and isinstance(b, Vector3):
-        return Vector3(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x)
-    else:
-        raise TypeError("Cannot multiply Vector 2 and Vector 3")
+    raise NotImplemented("Sorry, but this function is planned for a future update")
 
 
 def distance(a: Vector2 | Vector3 | Coord,
@@ -138,55 +123,3 @@ def distance(a: Vector2 | Vector3 | Coord,
         return sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2 + (b.z - a.z) ** 2)
     else:
         raise TypeError("Error in Calculation")
-
-
-def encryptDecryptBinary(binaryCode: str, operations: str = ""):
-    bits = []
-    for i in binaryCode:
-        if i == " ":
-            continue
-        else:
-            bits.append(int(i))
-    if operations == "":
-        return binaryCode
-    else:
-        for i in list(operations):
-            if i.isnumeric():
-                continue
-            if i == "I":
-                bits = [int(not bool(i)) for i in bits]
-            if i == "F":
-                bits.reverse()
-            if i == "S":
-                n = (operations[operations.index(i) + 1])
-                if n.isnumeric():
-                    bits = [bits[i] for i in range(-int(n), len(bits) - int(n))]
-                else:
-                    raise Exception("There should be a number after S")
-            if i == "X":
-                code = "".join([str(i) for i in bits])
-                part1 = list(code[0:4])
-                part2 = list(code[4:])
-                part1.reverse()
-                part2.reverse()
-                bits = [int(i) for i in part1] + [int(i) for i in part2]
-            if i == "W":
-                code = "".join([str(i) for i in bits])
-                part1 = list(code[0:4])
-                part2 = list(code[4:])
-                part1 = [part1[i] for i in range(-1, len(part1) - 1)]
-                part2 = [part2[i] for i in range(-1, len(part1) - 1)]
-                bits = [int(i) for i in part1] + [int(i) for i in part2]
-
-    return "".join([str(i) for i in bits])
-
-
-def binaryToAscii(binary: str):
-    codes = chunks(binary, 8)
-    finalMsg = []
-    for i in codes:
-        if len(i) == 8:
-            finalMsg.append(chr(int(i, 2)))
-        else:
-            raise ValueError("Each byte must be 8 bits long")
-    return "".join(finalMsg)

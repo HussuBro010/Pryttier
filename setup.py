@@ -2,9 +2,12 @@ from setuptools import setup, find_packages
 import codecs
 import os
 
-VERSION = '0.0.1'
+from pathlib import Path
+this_directory = Path(__file__).parent
+
+VERSION = '0.0.2'
 DESCRIPTION = 'A Python Tool Package'
-LONG_DESCRIPTION = 'A Python library full of tools that make python code more readable and make life easy!'
+LONG_DESCRIPTION = (this_directory / "README.md").read_text()
 
 # Setting up
 setup(

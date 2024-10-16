@@ -147,7 +147,7 @@ def distanceBetweenPoints(a: Coord, b: Coord):
 
 class Graph2D:
     def __init__(self, name: str = "Graph 2D", style: GraphStyle = GraphStyle.DEFAULT):
-        plt.style.use(style)
+        plt.style.use(style.value)
         self.name = name
         self.subplots = 0
 
