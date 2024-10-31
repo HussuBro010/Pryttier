@@ -19,6 +19,15 @@ class AnsiRGB:
         return self.code
 
 
+class AnsiRGB_BG:
+    def __init__(self, r: int, g: int, b: int):
+        self.code = f"\u001b[48;2;{r};{g};{b}m"
+
+    @property
+    def value(self):
+        return self.code
+
+
 class Colors(Enum):
     BLACK = AnsiColor(30)
     RED = AnsiColor(31).value
@@ -40,9 +49,9 @@ class Colors(Enum):
     RESET = '\033[0m'  # called to return to standard terminal text color
 
 
-def color(text: str, color: Colors | AnsiColor | AnsiRGB, reset: bool = True) -> str:
+def color(text: str, color: Colors | AnsiColor | AnsiRGB | AnsiRGB_BG, reset: bool = True) -> str:
     if reset:
-        text = color + text + Colors.RESET.value
+        text = color.value + text + Colors.RESET.value
     elif not reset:
         text = color.value + text
 

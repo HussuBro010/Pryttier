@@ -95,7 +95,7 @@ class Vector3:
     def __str__(self) -> str:
         return f"{self.x}i + {self.y}j + {self.z}k"
 
-    def __add__(self, other: Self | float) -> Self:
+    def __add__(self, other: Self) -> Self:
         return Vector3(self.x + other.x, self.y + other.y, self.z + other.z)
 
     def __sub__(self, other: Self) -> Self:
@@ -113,13 +113,11 @@ def cross(a: Vector2 | Vector3,
     raise NotImplemented("Sorry, but this function is planned for a future update")
 
 
-def distance(a: Vector2 | Vector3 | Coord,
-             b: Vector2 | Vector3 | Coord):
+def distance(a: Vector2 | Vector3,
+             b: Vector2 | Vector3):
     if (isinstance(a, Vector2)) and (isinstance(b, Vector2)):
         return sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2)
     elif isinstance(a, Vector3) and isinstance(b, Vector3):
-        return sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2 + (b.z - a.z) ** 2)
-    elif isinstance(a, Coord) and isinstance(b, Coord):
         return sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2 + (b.z - a.z) ** 2)
     else:
         raise TypeError("Error in Calculation")
