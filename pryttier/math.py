@@ -72,14 +72,23 @@ class Vector2:
     def __add__(self, other: Self) -> Self:
         return Vector2(self.x + other.x, self.y + other.y)
 
-    def __mul__(self, other: Self) -> Self:
-        return Vector2(self.x * other.x, self.y * other.y)
+    def __mul__(self, other: Self | float | int) -> Self:
+        if isinstance(other, float) or isinstance(other, int):
+            return Vector2(self.x * other, self.y * other)
+        elif isinstance(other, Vector2):
+            return Vector2(self.x * other.x, self.y * other.y)
 
     def __sub__(self, other: Self) -> Self:
         return Vector2(self.x - other.x, self.y - other.y)
 
     def normalize(self) -> Self:
         return Vector2(self.x / self.length, self.y / self.length)
+
+    def __truediv__(self, other):
+        if isinstance(other, float) or isinstance(other, int):
+            return Vector2(self.x / other, self.y / other)
+        elif isinstance(other, Vector2):
+            return Vector2(self.x / other.x, self.y / other.y)
 
 
 class Vector3:
@@ -92,7 +101,7 @@ class Vector3:
         self.z = z
         self.length = sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         return f"{self.x}i + {self.y}j + {self.z}k"
 
     def __add__(self, other: Self) -> Self:
@@ -101,11 +110,20 @@ class Vector3:
     def __sub__(self, other: Self) -> Self:
         return Vector3(self.x - other.x, self.y - other.y, self.z - other.z)
 
-    def __mul__(self, other: Self) -> Self:
-        return Vector3(self.x * other.x, self.y * other.y, self.z * other.z)
+    def __mul__(self, other: Self | float | int) -> Self:
+        if isinstance(other, float) or isinstance(other, int):
+            return Vector3(self.x * other, self.y * other, self.z * other)
+        elif isinstance(other, Vector3):
+            return Vector3(self.x * other.x, self.y * other.y, self.z * other.z)
 
     def normalize(self) -> Self:
         return Vector3(self.x / self.length, self.y / self.length, self.z / self.length)
+
+    def __truediv__(self, other):
+        if isinstance(other, float) or isinstance(other, int):
+            return Vector3(self.x / other, self.y / other, self.z / other)
+        elif isinstance(other, Vector3):
+            return Vector3(self.x / other.x, self.y / other.y, self.z / other.z)
 
 
 def cross(a: Vector2 | Vector3,
@@ -121,3 +139,18 @@ def distance(a: Vector2 | Vector3,
         return sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2 + (b.z - a.z) ** 2)
     else:
         raise TypeError("Error in Calculation")
+
+
+def linearInterpolation2D(p1: Vector2, p2: Vector2, step: int):
+    interpolation = []
+
+    interpolation.append(p1)
+    interpolation.append(p2)
+
+    for i in range(p1.x, p2.x, step):
+        x = i / 255
+        m = (p2.y - p1.y) / (p2.x - p1.x)
+        y = p1.y + (x - p1.x) * m
+        interpolation.append(Vector2(x, y))
+
+    return interpolation

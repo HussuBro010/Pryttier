@@ -4,7 +4,7 @@ from typing import *
 from os import PathLike
 
 from .tools import *
-from .math import *
+from .math import Vector2, Vector3
 import pandas as pd
 
 import numpy as np
@@ -144,59 +144,68 @@ class ColorFunction(enum.Enum):
 class Graph2D:
     def __init__(self, name: str = "Graph 2D", style: GraphStyle = GraphStyle.DEFAULT):
         plt.style.use(style.value)
+        self.fig = plt.figure(figsize=(16, 9))
         self.name = name
         self.subplots = 0
 
     def addAxes(self):
-        self.ax = plt.axes()
+        self.ax = plt.subplot()
         self.ax.set_title(self.name)
 
-    def addSubplot(self, row: int, col: int):
+    def addSubplot(self, row: int, col: int, title: str = None):
+        if title is None:
+            title = f"{self.subplots}"
         self.subplots += 1
-        self.ax = plt.subplot(row, col, self.subplots)
+        self.ax = self.fig.add_subplot(row, col, self.subplots)
+        self.ax.set_title(title)
 
     def setTitle(self, title: str):
-        plt.title(title)
+        self.ax.set_title(title)
+
+    def setXlim(self, lim: tuple[float | int, float | int]):
+        self.ax.set_xlim(lim)
+
+    def setYlim(self, lim: tuple[float | int, float | int]):
+        self.ax.set_ylim(lim)
 
     def setXLabel(self, label: str):
-        plt.xlabel(label)
+        self.ax.set_xlabel(label)
 
     def setYLabel(self, label: str):
-        plt.ylabel(label)
+        self.ax.set_ylabel(label)
 
-    def plotPoint(self, point: Vector2, color: str = 'blue', label: str = None):
-        return self.ax.scatter(point.x, point.y, color=color, label=label)
+    def save(self, name: str):
+        self.fig.savefig(name)
 
-    def plotPoints(self, *points: Vector2, color: str = 'blue', label: str = None):
-        return self.ax.scatter([i.x for i in points], [j.y for j in points], color=color, label=label)
+    def plotPoint(self, point: Vector2, **kwargs):
+        return self.ax.scatter(point.x, point.y, **kwargs)
 
-    def drawLine(self, start: Vector2, end: Vector2, color: str = 'blue', linewidth: float = 2, linestyle: str = "-", label: str = None):
-        line = self.ax.plot([start.x, end.x], [start.y, end.y], color=color, linestyle=linestyle, linewidth=linewidth, label=label)
+    def plotPoints(self, *points: Vector2, **kwargs):
+        return self.ax.scatter([i.x for i in points], [j.y for j in points], **kwargs)
+
+    def drawLine(self, start: Vector2, end: Vector2, **kwargs):
+        line = self.ax.plot([start.x, end.x], [start.y, end.y], **kwargs)
         return line
 
-    def linePlot(self, xVals: Sequence, yVals: Sequence, color: str = 'blue', marker: str = None, linewidth: float = 2,
-                 linestyle: str = "-", label: str = None):
+    def linePlot(self, xVals: Sequence, yVals: Sequence, **kwargs):
         if len(xVals) == len(yVals):
-            if marker is None:
-                return self.ax.plot(xVals, yVals, color, linestyle=linestyle, linewidth=linewidth, label=label)
-            else:
-                return self.ax.plot(xVals, yVals, color, marker=marker, linestyle=linestyle, linewidth=linewidth, label=label)
+            return self.ax.plot(xVals, yVals, **kwargs)
         else:
             raise ValueError(f"Length of both arrays should be same. Lengths - X: {len(xVals)}, Y: {len(yVals)}")
 
-    def scatterPlot(self, xVals: Sequence, yVals: Sequence, color: str = 'blue', label: str = None):
+    def scatterPlot(self, xVals: Sequence, yVals: Sequence, **kwargs):
         if len(xVals) == len(yVals):
-            sctr = self.ax.scatter(xVals, yVals, color=color, label=label)
+            sctr = self.ax.scatter(xVals, yVals, **kwargs)
         else:
             raise ValueError(f"Length of both arrays should be same. Lengths - X: {len(xVals)}, Y: {len(yVals)}")
         return sctr
 
     def scatterPlotCF(self, xVals: Sequence, yVals: Sequence,
                       cfunction: Callable | ColorFunction = (lambda x, y, z: x + y), cmap: ColorMap = ColorMap.VIRIDIS,
-                      colorBar: bool = False, label: str = None):
+                      colorBar: bool = False, **kwargs):
         c = [cfunction(item1, item2, 0) for item1, item2 in zip(xVals, yVals)]
         if len(xVals) == len(yVals):
-            sctr = self.ax.scatter(xVals, yVals, cmap=cmap.value, c=c, label=label)
+            sctr = self.ax.scatter(xVals, yVals, cmap=cmap.value, c=c, **kwargs)
             if colorBar:
                 plt.colorbar(sctr)
         else:
@@ -217,6 +226,13 @@ class Graph2D:
         else:
             self.ax.plot(x, y, color)
 
+    def annotate(self, text: str, xy: tuple[float, float]):
+        self.ax.annotate(text, xy)
+
+    @staticmethod
+    def showGrid():
+        plt.grid()
+
     @staticmethod
     def legend(*args, **kwargs):
         plt.legend(*args, **kwargs)
@@ -224,3 +240,98 @@ class Graph2D:
     @staticmethod
     def show():
         plt.show()
+
+
+class Graph3D:
+    def __init__(self, name: str = "Graph 3D", style: GraphStyle = GraphStyle.DEFAULT):
+        self.fig = plt.figure()
+        plt.style.use(style.value)
+        self.name = name
+        self.subplots = 0
+
+    def addAxes(self):
+        self.ax = self.fig.add_subplot(projection="3d")
+        plt.title(self.name)
+
+    def addSubplot(self, row: int, col: int, title: str = None):
+        if title is None:
+            title = f"{self.subplots}"
+        self.subplots += 1
+        self.ax = self.fig.add_subplot(row, col, self.subplots, projection='3d')
+        self.ax.set_title(title)
+
+    def setTitle(self, title: str):
+        self.ax.set_title(title)
+
+    def setXlim(self, lim: tuple[float | int, float | int]):
+        self.ax.set_xlim(lim)
+
+    def setYlim(self, lim: tuple[float | int, float | int]):
+        self.ax.set_ylim(lim)
+
+    def setZlim(self, lim: tuple[float | int, float | int]):
+        self.ax.set_zlim(lim)
+
+    def setXLabel(self, label: str):
+        self.ax.set_xlabel(label)
+
+    def setYLabel(self, label: str):
+        self.ax.set_ylabel(label)
+
+    def setZLabel(self, label: str):
+        self.ax.set_zlabel(label)
+
+    def save(self, name: str):
+        self.fig.savefig(name)
+
+    def point(self, point: Vector3, **kwargs):
+        return self.ax.scatter3D(point.x, point.y, point.z, **kwargs)
+
+    def points(self, *points: Vector3, **kwargs):
+        return self.ax.scatter3D([i.x for i in points], [j.y for j in points], [k.z for k in points], **kwargs)
+
+    def linePlot(self, xVals: Sequence, yVals: Sequence, zVals: Sequence, **kwargs):
+        if len(xVals) == len(yVals) == len(zVals):
+            return self.ax.plot(xVals, yVals, zVals, **kwargs)
+        else:
+            raise ValueError(
+                f"Length of arrays should be same. Lengths - X: {len(xVals)}, Y: {len(yVals)}, Z: {len(zVals)}")
+
+    def scatterPlot(self, xVals: Sequence, yVals: Sequence, zVals: Sequence, **kwargs):
+        if len(xVals) == len(yVals) == len(zVals):
+            sctr = self.ax.scatter3D(xVals, yVals, zVals, **kwargs)
+        else:
+            raise ValueError(
+                f"Length of arrays should be same. Lengths - X: {len(xVals)}, Y: {len(yVals)}, Z: {len(zVals)}")
+        return sctr
+
+    def scatterPlotCF(self, xVals: Sequence, yVals: Sequence, zVals: Sequence,
+                      cfunction: Callable | ColorFunction = (lambda x, y, z: x + y), cmap: ColorMap = ColorMap.VIRIDIS,
+                      colorBar: bool = False, **kwargs):
+        c = [cfunction(item1, item2, item3) for item1, item2, item3 in zip(xVals, yVals, zVals)]
+        if len(xVals) == len(yVals):
+            sctr = self.ax.scatter3D(xVals, yVals, zVals, cmap=cmap.value, c=c, **kwargs)
+            if colorBar:
+                self.fig.colorbar(sctr)
+        else:
+            raise ValueError(f"Length of both arrays should be same. Lengths - X: {len(xVals)}, Y: {len(yVals)}")
+        return sctr
+
+    def annotate(self, text: str, xy: tuple[float, float]):
+        self.ax.annotate(text, xy)
+
+    @staticmethod
+    def showGrid():
+        plt.grid()
+
+    @staticmethod
+    def legend(*args, **kwargs):
+        plt.legend(*args, **kwargs)
+
+    @staticmethod
+    def show():
+        plt.show()
+
+    @staticmethod
+    def imshow(*args, **kwargs):
+        plt.imshow(*args, **kwargs)
