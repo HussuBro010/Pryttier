@@ -6,7 +6,7 @@ Pryttier has many functions from custom infix operations to making use of matplo
 
 ## Installation
 
-#### Current Latest Version of the package:- 0.0.4
+#### Current Latest Version of the package:- 0.1.1
 
 Run:-
 
@@ -16,7 +16,7 @@ pip install pryttier
 
 or
 
-Run for installing a specific version
+Run for installing a specific version:-
 
 ```commandline
 pip install pryttier==VERSION

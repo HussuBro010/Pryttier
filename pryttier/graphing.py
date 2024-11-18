@@ -144,20 +144,19 @@ class ColorFunction(enum.Enum):
 class Graph2D:
     def __init__(self, name: str = "Graph 2D", style: GraphStyle = GraphStyle.DEFAULT):
         plt.style.use(style.value)
-        self.fig = plt.figure(figsize=(16, 9))
+        self.fig = plt.figure()
         self.name = name
         self.subplots = 0
 
     def addAxes(self):
-        self.ax = plt.subplot()
+        self.ax = self.fig.add_subplot()
         self.ax.set_title(self.name)
 
     def addSubplot(self, row: int, col: int, title: str = None):
-        if title is None:
-            title = f"{self.subplots}"
         self.subplots += 1
         self.ax = self.fig.add_subplot(row, col, self.subplots)
-        self.ax.set_title(title)
+        if title is not None:
+            self.ax.set_title(title)
 
     def setTitle(self, title: str):
         self.ax.set_title(title)
@@ -331,7 +330,3 @@ class Graph3D:
     @staticmethod
     def show():
         plt.show()
-
-    @staticmethod
-    def imshow(*args, **kwargs):
-        plt.imshow(*args, **kwargs)

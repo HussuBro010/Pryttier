@@ -24,33 +24,6 @@ isDivisibleBy = Infix(lambda x, y: x % y == 0)  # checks if x is divisible by y
 applyTo = Infix(lambda x, y: [x(i) for i in y])
 
 
-def isPrime(n: int) -> bool:
-    """
-    Checks if the given number is a prime number.
-
-    Parameters:
-    n (int): The number to be checked.
-
-    Returns:
-    bool: True if the number is a prime number, False otherwise.
-    """
-    if n <= 1:
-        return False
-    for i in range(2, int(n ** 0.5) + 1):
-        if n % i == 0:
-            return False
-    return True
-
-
-def getFactors(num: int):
-    factors = []
-    for i in range(1, num + 1):
-        if num | isDivisibleBy | i:
-            factors.append(i)
-
-    return factors
-
-
 def apply(itr: Iterable, func: Callable) -> list:
     return [func(x) for x in itr]
 

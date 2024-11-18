@@ -1,6 +1,5 @@
 from typing import *
 from numpy import *
-from .graphing import *
 
 PI = 2 * acos(0)
 Degrees = PI / 180
@@ -21,13 +20,11 @@ def product(n: int, i: int, expr: Callable) -> float:
 
 
 def clamp(num: float, low: float, high: float) -> float:
-    if (num > low) and (num < high):
-        return num
-    else:
-        if num < low:
-            return low
-        if num > high:
-            return high
+    if num < low:
+        return low
+    if num > high:
+        return high
+    return num
 
 
 def sign(num: float) -> int:
@@ -58,6 +55,24 @@ def mapRange(value: int | float,
     return (value - min1) / (max1 - min1) * (max2 - min2) + min2
 
 
+
+def isPrime(n: int) -> bool:
+    if n <= 1:
+        return False
+    for i in range(2, int(n ** 0.5) + 1):
+        if n % i == 0:
+            return False
+    return True
+
+
+def getFactors(num: int):
+    factors = []
+    for i in range(1, num + 1):
+        if num | isDivisibleBy | i:
+            factors.append(i)
+
+    return factors
+
 class Vector2:
     def __init__(self,
                  x: float | int,
@@ -66,11 +81,14 @@ class Vector2:
         self.y = y
         self.length = sqrt(self.x * self.x + self.y * self.y)
 
-    def __str__(self) -> str:
-        return f"{self.x}i + {self.y}j"
+    def __repr__(self) -> str:
+        return f"({self.x}, {self.y})"
 
     def __add__(self, other: Self) -> Self:
         return Vector2(self.x + other.x, self.y + other.y)
+
+    def __sub__(self, other: Self) -> Self:
+        return Vector2(self.x - other.x, self.y - other.y)
 
     def __mul__(self, other: Self | float | int) -> Self:
         if isinstance(other, float) or isinstance(other, int):
@@ -78,17 +96,14 @@ class Vector2:
         elif isinstance(other, Vector2):
             return Vector2(self.x * other.x, self.y * other.y)
 
-    def __sub__(self, other: Self) -> Self:
-        return Vector2(self.x - other.x, self.y - other.y)
-
-    def normalize(self) -> Self:
-        return Vector2(self.x / self.length, self.y / self.length)
-
     def __truediv__(self, other):
         if isinstance(other, float) or isinstance(other, int):
             return Vector2(self.x / other, self.y / other)
         elif isinstance(other, Vector2):
             return Vector2(self.x / other.x, self.y / other.y)
+
+    def normalize(self) -> Self:
+        return Vector2(self.x / self.length, self.y / self.length)
 
 
 class Vector3:
@@ -102,7 +117,7 @@ class Vector3:
         self.length = sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
 
     def __repr__(self) -> str:
-        return f"{self.x}i + {self.y}j + {self.z}k"
+        return f"({self.x}, {self.y}, {self.z})"
 
     def __add__(self, other: Self) -> Self:
         return Vector3(self.x + other.x, self.y + other.y, self.z + other.z)
@@ -116,14 +131,14 @@ class Vector3:
         elif isinstance(other, Vector3):
             return Vector3(self.x * other.x, self.y * other.y, self.z * other.z)
 
-    def normalize(self) -> Self:
-        return Vector3(self.x / self.length, self.y / self.length, self.z / self.length)
-
     def __truediv__(self, other):
         if isinstance(other, float) or isinstance(other, int):
             return Vector3(self.x / other, self.y / other, self.z / other)
         elif isinstance(other, Vector3):
             return Vector3(self.x / other.x, self.y / other.y, self.z / other.z)
+
+    def normalize(self) -> Self:
+        return Vector3(self.x / self.length, self.y / self.length, self.z / self.length)
 
 
 def cross(a: Vector2 | Vector3,
@@ -139,18 +154,3 @@ def distance(a: Vector2 | Vector3,
         return sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2 + (b.z - a.z) ** 2)
     else:
         raise TypeError("Error in Calculation")
-
-
-def linearInterpolation2D(p1: Vector2, p2: Vector2, step: int):
-    interpolation = []
-
-    interpolation.append(p1)
-    interpolation.append(p2)
-
-    for i in range(p1.x, p2.x, step):
-        x = i / 255
-        m = (p2.y - p1.y) / (p2.x - p1.x)
-        y = p1.y + (x - p1.x) * m
-        interpolation.append(Vector2(x, y))
-
-    return interpolation
