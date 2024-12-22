@@ -6,7 +6,7 @@ Pryttier has many functions from custom infix operations to making use of matplo
 
 ## Installation
 
-#### Current Latest Version of the package:- 0.1.1
+#### Current Latest Version of the package:- 0.1.2
 
 Run:-
 

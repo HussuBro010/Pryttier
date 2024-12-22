@@ -1,7 +1,9 @@
 from typing import *
 from numpy import *
+from numpy.ma.core import arccos
+from pryttier.tools import isDivisibleBy
 
-PI = 2 * acos(0)
+PI = 2 * arccos(0)
 Degrees = PI / 180
 
 
@@ -154,3 +156,58 @@ def distance(a: Vector2 | Vector3,
         return sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2 + (b.z - a.z) ** 2)
     else:
         raise TypeError("Error in Calculation")
+
+
+class Matrix:
+    def __init__(self, mat: Sequence[Sequence[int | float]]):
+        self.matrix = array(mat)
+        self.rows = len(self.matrix)
+        self.cols = len(self.matrix[0])
+        self.size = (self.rows, self.cols)
+
+    def __repr__(self):
+        return str(self.matrix)
+
+    def __neg__(self):
+        mat = []
+        for i in self.matrix:
+            mat.append([])
+            for a in i:
+                mat[-1].append(-a)
+        return Matrix(mat)
+
+    def __add__(self, other: Self):
+        if self.size != other.size:
+            raise ValueError(f"Cannot add matrices with sizes {self.size}, {other.size}")
+        mat = []
+        for i, j in zip(self.matrix, other.matrix):
+            mat.append([])
+            for a, b in zip(i, j):
+                mat[-1].append(a + b)
+        return Matrix(mat)
+
+    def __sub__(self, other: Self):
+        return self + -other
+
+    def __mul__(self, other: Self | int | float):
+        if isinstance(other, int) or isinstance(other, float):
+            mat = []
+            for i in self.matrix:
+                mat.append([])
+                for a in i:
+                    mat[-1].append(a * other)
+            return Matrix(mat)
+        if isinstance(other, Matrix):
+            a = self.matrix
+            b = other.matrix
+
+            if self.cols != other.rows:
+                raise ValueError(f"Number of columns of the first matrix (cols: {self.cols}) must be equal to the number of rows of the second matrix (rows: {other.rows})")
+
+            result = dot(a, b)
+
+            return Matrix(result)
+
+    def swapColsAndRows(self):
+        mat = [[self.matrix[i][j] for i in range(self.rows)] for j in range(self.cols)]
+        return Matrix(mat)

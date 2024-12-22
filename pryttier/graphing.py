@@ -1,14 +1,13 @@
-import matplotlib
-import matplotlib.pyplot as plt
-from typing import *
+import enum
 from os import PathLike
 
-from .tools import *
-from .math import Vector2, Vector3
-import pandas as pd
-
+import matplotlib.pyplot as plt
 import numpy as np
-import enum
+import pandas as pd
+from matplotlib.widgets import Slider
+
+from pryttier.math import Vector2, Vector3
+from pryttier.tools import *
 
 
 class GraphStyle(enum.Enum):
@@ -144,12 +143,21 @@ class ColorFunction(enum.Enum):
 class Graph2D:
     def __init__(self, name: str = "Graph 2D", style: GraphStyle = GraphStyle.DEFAULT):
         plt.style.use(style.value)
+        self.ax = None
         self.fig = plt.figure()
         self.name = name
         self.subplots = 0
+        self.xLim = (-10, 10)
+        self.yLim = (-10, 10)
+        self.zLim = (-10, 10)
+        self.sliders = 0
 
     def addAxes(self):
         self.ax = self.fig.add_subplot()
+        self.ax.set_title(self.name)
+
+    def addAxesForWidgets(self):
+        self.ax = self.fig.add_subplot(1, 2, 1)
         self.ax.set_title(self.name)
 
     def addSubplot(self, row: int, col: int, title: str = None):
@@ -163,15 +171,25 @@ class Graph2D:
 
     def setXlim(self, lim: tuple[float | int, float | int]):
         self.ax.set_xlim(lim)
+        self.xLim = lim
 
     def setYlim(self, lim: tuple[float | int, float | int]):
         self.ax.set_ylim(lim)
+        self.yLim = lim
+
+    def setLims(self, limX: tuple[float | int, float | int], limY: tuple[float | int, float | int]):
+        self.setXlim(limX)
+        self.setYlim(limY)
 
     def setXLabel(self, label: str):
         self.ax.set_xlabel(label)
 
     def setYLabel(self, label: str):
         self.ax.set_ylabel(label)
+
+    def setLabels(self, labelX: str, labelY: str):
+        self.setXLabel(labelX)
+        self.setYLabel(labelY)
 
     def save(self, name: str):
         self.fig.savefig(name)
@@ -228,6 +246,20 @@ class Graph2D:
     def annotate(self, text: str, xy: tuple[float, float]):
         self.ax.annotate(text, xy)
 
+    def addSlider(self, posX: float = None, posY: float = None, sizeX: float = None, sizeY: float = None, label: str = "slider",
+                  min: float | int = 0, max: float | int = 1, initialVal: float | int = 0, stepVal: float | int = 0.1):
+        if posX is None:
+            posX = 0.55
+        if posY is None:
+            posY = 0.8 - (0.1 * self.sliders)
+        if sizeX is None:
+            sizeX = 0.3
+        if sizeY is None:
+            sizeY = 0.05
+        widgetAxes = self.fig.add_axes((posX, posY, sizeX, sizeY))
+        self.sliders += 1
+        return Slider(widgetAxes, label, min, max, valinit=initialVal, valstep=stepVal)
+
     @staticmethod
     def showGrid():
         plt.grid()
@@ -243,14 +275,25 @@ class Graph2D:
 
 class Graph3D:
     def __init__(self, name: str = "Graph 3D", style: GraphStyle = GraphStyle.DEFAULT):
+        self.ax = None
         self.fig = plt.figure()
         plt.style.use(style.value)
         self.name = name
         self.subplots = 0
+        self.xLim = (-10, 10)
+        self.yLim = (-10, 10)
+        self.zLim = (-10, 10)
+        self.sliders = 0
+
+    def clear(self):
+        self.ax.cla()
 
     def addAxes(self):
         self.ax = self.fig.add_subplot(projection="3d")
         plt.title(self.name)
+
+    def addAxesWithWidgets(self):
+        self.ax = self.fig.add_subplot(1, 2, 1, projection="3d")
 
     def addSubplot(self, row: int, col: int, title: str = None):
         if title is None:
@@ -263,13 +306,24 @@ class Graph3D:
         self.ax.set_title(title)
 
     def setXlim(self, lim: tuple[float | int, float | int]):
+        self.xLim = lim
         self.ax.set_xlim(lim)
 
     def setYlim(self, lim: tuple[float | int, float | int]):
+        self.yLim = lim
         self.ax.set_ylim(lim)
 
     def setZlim(self, lim: tuple[float | int, float | int]):
+        self.zLim = lim
         self.ax.set_zlim(lim)
+
+    def setLims(self,
+                limX: tuple[float | int, float | int],
+                limY: tuple[float | int, float | int],
+                limZ: tuple[float | int, float | int]):
+        self.setXlim(limX)
+        self.setYlim(limY)
+        self.setZlim(limZ)
 
     def setXLabel(self, label: str):
         self.ax.set_xlabel(label)
@@ -279,6 +333,14 @@ class Graph3D:
 
     def setZLabel(self, label: str):
         self.ax.set_zlabel(label)
+
+    def setLabels(self,
+                  labelX: str,
+                  labelY: str,
+                  labelZ: str):
+        self.setXLabel(labelX)
+        self.setYLabel(labelY)
+        self.setZLabel(labelZ)
 
     def save(self, name: str):
         self.fig.savefig(name)
@@ -319,6 +381,20 @@ class Graph3D:
     def annotate(self, text: str, xy: tuple[float, float]):
         self.ax.annotate(text, xy)
 
+    def addSlider(self, posX: float = None, posY: float = None, sizeX: float = None, sizeY: float = None, label: str = "slider",
+                  min: float | int = 0, max: float | int = 1, initialVal: float | int = 0, stepVal: float | int = 0.1):
+        if posX is None:
+            posX = 0.55
+        if posY is None:
+            posY = 0.8 - (0.1 * self.sliders)
+        if sizeX is None:
+            sizeX = 0.3
+        if sizeY is None:
+            sizeY = 0.05
+        widgetAxes = self.fig.add_axes((posX, posY, sizeX, sizeY))
+        self.sliders += 1
+        return Slider(widgetAxes, label, min, max, valinit=initialVal, valstep=stepVal)
+
     @staticmethod
     def showGrid():
         plt.grid()
@@ -330,3 +406,20 @@ class Graph3D:
     @staticmethod
     def show():
         plt.show()
+
+
+def generateFaceColors(graph: Graph3D,
+                       values: Sequence[Vector3] | tuple[
+                           Sequence[int | float], Sequence[int | float], Sequence[int | float]]):
+    if isinstance(graph, Graph2D):
+        raise ValueError(f"Graph must be of type {Graph3D.__name__} not {Graph2D.__name__}")
+    if not ((graph.xLim == (0, 1)) and (graph.yLim == (0, 1)) and (graph.zLim == (0, 1))):
+        raise Exception(f"Graph's axes limits must be (0, 1). Got X:{graph.xLim} Y:{graph.yLim} Z:{graph.zLim}")
+    if type(values) == Sequence[Vector3]:
+        return [[a.x, a.y, a.z] for a in values]
+    if type(values) == tuple:
+        if len(values[0]) == len(values[1]) == len(values[2]):
+            return [[a, b, c] for a, b, c in zip(values[0], values[1], values[2])]
+        else:
+            raise ValueError(
+                f"Length of x, y and z values must be same. Got X:{len(values[0])} Y:{len(values[1])} Z:{len(values[0])}")

@@ -1,6 +1,9 @@
+import random
 from enum import Enum
-import colorsys
+from typing import Self
+
 from pryttier.math import Vector3
+
 
 class RGB:
     def __init__(self, r, g, b):
@@ -8,30 +11,31 @@ class RGB:
         self.r = r
         self.g = g
         self.b = b
-        self._normalized = False
+
+    @classmethod
+    def random(cls):
+        r = random.randint(0, 255)
+        g = random.randint(0, 255)
+        b = random.randint(0, 255)
+        return RGB(r, g, b)
 
     def __repr__(self):
         return f"({self.r}, {self.g}, {self.b})"
 
-    def normalize(self) -> None:
-        self._normalized = True
-        self.r /= 255
-        self.g /= 255
-        self.b /= 255
-        self.rgb = (self.r, self.g, self.b)
+    def __mul__(self, other: int | float | Self):
+        if isinstance(other, int) or isinstance(other, float):
+            return RGB(int(self.r * other), int(self.g * other), int(self.b * other))
+        if isinstance(other, RGB):
+            return RGB(int(self.r * other.r), int(self.g * other.g), int(self.b * other.b))
 
-    def denormalize(self) -> None:
-        self._normalized = False
-        self.r *= 255
-        self.g *= 255
-        self.b *= 255
-        self.rgb = (self.r, self.g, self.b)
+    def __truediv__(self, other: int | float | Self):
+        if isinstance(other, int) or isinstance(other, float):
+            return RGB(int(self.r / other), int(self.g / other), int(self.b / other))
+        if isinstance(other, RGB):
+            return RGB(int(self.r / other.r), int(self.g / other.g), int(self.b / other.b))
 
     def complement(self):
-        if self._normalized:
-            return RGB(1 - self.r, 1 - self.g, 1 - self.b)
-        else:
-            return RGB(255 - self.r, 255 - self.g, 255 - self.b)
+        return RGB(255 - self.r, 255 - self.g, 255 - self.b)
 
     def toVector(self):
         return Vector3(self.r, self.g, self.b)
@@ -72,21 +76,21 @@ class AnsiRGB_BG:
 
 class AnsiColors(Enum):
     BLACK = AnsiColor(30)
-    RED = AnsiColor(31).value
-    GREEN = AnsiColor(32).value
-    YELLOW = AnsiColor(33).value  # orange on some systems
-    BLUE = AnsiColor(34).value
-    MAGENTA = AnsiColor(35).value
-    CYAN = AnsiColor(36).value
-    LIGHT_GRAY = AnsiColor(37).value
-    DARK_GRAY = AnsiColor(90).value
-    BRIGHT_RED = AnsiColor(91).value
-    BRIGHT_GREEN = AnsiColor(92).value
-    BRIGHT_YELLOW = AnsiColor(93).value
-    BRIGHT_BLUE = AnsiColor(94).value
-    BRIGHT_MAGENTA = AnsiColor(95).value
-    BRIGHT_CYAN = AnsiColor(96).value
-    WHITE = AnsiColor(97).value
+    RED = AnsiColor(31)
+    GREEN = AnsiColor(32)
+    YELLOW = AnsiColor(33)  # orange on some systems
+    BLUE = AnsiColor(34)
+    MAGENTA = AnsiColor(35)
+    CYAN = AnsiColor(36)
+    LIGHT_GRAY = AnsiColor(37)
+    DARK_GRAY = AnsiColor(90)
+    BRIGHT_RED = AnsiColor(91)
+    BRIGHT_GREEN = AnsiColor(92)
+    BRIGHT_YELLOW = AnsiColor(93)
+    BRIGHT_BLUE = AnsiColor(94)
+    BRIGHT_MAGENTA = AnsiColor(95)
+    BRIGHT_CYAN = AnsiColor(96)
+    WHITE = AnsiColor(97)
 
     RESET = '\033[0m'  # called to return to standard terminal text color
 
