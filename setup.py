@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 this_directory = Path(__file__).parent
 
-VERSION = '0.1.2'
+VERSION = '0.1.3'
 DESCRIPTION = 'A Python Tool Package'
 LONG_DESCRIPTION = (this_directory / "README.md").read_text()
 

@@ -1,6 +1,9 @@
+import math
 from typing import *
+
 from numpy import *
 from numpy.ma.core import arccos
+
 from pryttier.tools import isDivisibleBy
 
 PI = 2 * arccos(0)
@@ -57,7 +60,6 @@ def mapRange(value: int | float,
     return (value - min1) / (max1 - min1) * (max2 - min2) + min2
 
 
-
 def isPrime(n: int) -> bool:
     if n <= 1:
         return False
@@ -75,13 +77,22 @@ def getFactors(num: int):
 
     return factors
 
+
+def radToDeg(num: float):
+    return num * (180 / PI)
+
+
+def degToRad(num: float):
+    return num * (PI / 180)
+
+
 class Vector2:
     def __init__(self,
                  x: float | int,
                  y: float | int):
         self.x = x
         self.y = y
-        self.length = sqrt(self.x * self.x + self.y * self.y)
+        self.magnitude = sqrt(self.x * self.x + self.y * self.y)
 
     def __repr__(self) -> str:
         return f"({self.x}, {self.y})"
@@ -104,9 +115,43 @@ class Vector2:
         elif isinstance(other, Vector2):
             return Vector2(self.x / other.x, self.y / other.y)
 
-    def normalize(self) -> Self:
-        return Vector2(self.x / self.length, self.y / self.length)
+    def __iter__(self):
+        return iter([self.x, self.y])
 
+    def normalize(self) -> Self:
+        return Vector2(self.x / self.magnitude, self.y / self.magnitude)
+
+    def toInt(self):
+        return Vector2(int(self.x), int(self.y))
+
+    # ---Class Methods---
+    @classmethod
+    def distance(cls, a: Self, b: Self):
+        dx = b.x - a.x
+        dy = b.y - a.y
+        return math.sqrt(dx * dx + dy * dy)
+
+    @classmethod
+    def dot(cls, a: Self, b: Self):
+        return a.x * b.x + a.y * b.y
+
+    @classmethod
+    def cross(cls, a: Self, b: Self):
+        return a.x * b.y - a.y * b.x
+
+    @classmethod
+    def angleBetween(cls, a: Self, b: Self):
+        dotProduct = cls.dot(a, b)
+        magA = a.magnitude
+        magB = b.magnitude
+        return math.acos(dotProduct / (magA * magB))
+
+    @classmethod
+    def interpolate(cls, a: Self, b: Self, t: float):
+        v = b - a
+        pdx = a.x + v.x * t
+        pdy = a.y + v.y * t
+        return Vector2(pdx, pdy)
 
 class Vector3:
     def __init__(self,
@@ -116,7 +161,7 @@ class Vector3:
         self.x = x
         self.y = y
         self.z = z
-        self.length = sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
+        self.magnitude = sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
 
     def __repr__(self) -> str:
         return f"({self.x}, {self.y}, {self.z})"
@@ -139,24 +184,48 @@ class Vector3:
         elif isinstance(other, Vector3):
             return Vector3(self.x / other.x, self.y / other.y, self.z / other.z)
 
+    def __iter__(self):
+        return iter([self.x, self.y, self.z])
+
     def normalize(self) -> Self:
-        return Vector3(self.x / self.length, self.y / self.length, self.z / self.length)
+        return Vector3(self.x / self.magnitude, self.y / self.magnitude, self.z / self.magnitude)
+
+    def toInt(self):
+        return Vector3(int(self.x), int(self.y), int(self.z))
+    # ---Class Methods---
+    @classmethod
+    def distance(cls, a: Self, b: Self):
+        dx = b.x - a.x
+        dy = b.y - a.y
+        dz = b.z - a.z
+        return math.sqrt(dx * dx + dy * dy + dz * dz)
+
+    @classmethod
+    def dot(cls, a: Self, b: Self):
+        return a.x * b.x + a.y * b.y + a.z * a.z
+
+    @classmethod
+    def cross(cls, a: Self, b: Self) -> Self:
+        i = a.y * b.z - a.z * b.y
+        j = a.z * b.x - a.x * b.z
+        k = a.x * b.y - a.y * b.x
+        return Vector3(i, j, k)
+
+    @classmethod
+    def angleBetween(cls, a: Self, b: Self):
+        dotProduct = cls.dot(a, b)
+        magA = a.magnitude
+        magB = b.magnitude
+        return math.acos(dotProduct / (magA * magB))
 
 
-def cross(a: Vector2 | Vector3,
-          b: Vector2 | Vector3) -> Vector3 | float:
-    raise NotImplemented("Sorry, but this function is planned for a future update")
-
-
-def distance(a: Vector2 | Vector3,
-             b: Vector2 | Vector3):
-    if (isinstance(a, Vector2)) and (isinstance(b, Vector2)):
-        return sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2)
-    elif isinstance(a, Vector3) and isinstance(b, Vector3):
-        return sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2 + (b.z - a.z) ** 2)
-    else:
-        raise TypeError("Error in Calculation")
-
+    @classmethod
+    def interpolate(cls, a: Self, b: Self, t: float):
+        v = b - a
+        pdx = a.x + v.x * t
+        pdy = a.y + v.y * t
+        pdz = a.z + v.z * t
+        return Vector3(pdx, pdy, pdz)
 
 class Matrix:
     def __init__(self, mat: Sequence[Sequence[int | float]]):
@@ -202,7 +271,8 @@ class Matrix:
             b = other.matrix
 
             if self.cols != other.rows:
-                raise ValueError(f"Number of columns of the first matrix (cols: {self.cols}) must be equal to the number of rows of the second matrix (rows: {other.rows})")
+                raise ValueError(
+                    f"Number of columns of the first matrix (cols: {self.cols}) must be equal to the number of rows of the second matrix (rows: {other.rows})")
 
             result = dot(a, b)
 

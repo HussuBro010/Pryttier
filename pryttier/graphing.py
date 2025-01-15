@@ -4,7 +4,8 @@ from os import PathLike
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.widgets import Slider
+from matplotlib.pyplot import contour
+from matplotlib.widgets import Slider, Button
 
 from pryttier.math import Vector2, Vector3
 from pryttier.tools import *
@@ -144,13 +145,19 @@ class Graph2D:
     def __init__(self, name: str = "Graph 2D", style: GraphStyle = GraphStyle.DEFAULT):
         plt.style.use(style.value)
         self.ax = None
-        self.fig = plt.figure()
+        self.fig = None
         self.name = name
         self.subplots = 0
         self.xLim = (-10, 10)
         self.yLim = (-10, 10)
         self.zLim = (-10, 10)
-        self.sliders = 0
+        self.widgets = 0
+
+    def clear(self):
+        self.ax.cla()
+
+    def addFigure(self):
+        self.fig = plt.figure()
 
     def addAxes(self):
         self.ax = self.fig.add_subplot()
@@ -160,9 +167,12 @@ class Graph2D:
         self.ax = self.fig.add_subplot(1, 2, 1)
         self.ax.set_title(self.name)
 
-    def addSubplot(self, row: int, col: int, title: str = None):
+    def setFig(self, fig):
+        self.fig = fig
+
+    def addSubplot(self, row: int, col: int, index: int = None, title: str = None):
         self.subplots += 1
-        self.ax = self.fig.add_subplot(row, col, self.subplots)
+        self.ax = self.fig.add_subplot(row, col, self.subplots if index is None else index)
         if title is not None:
             self.ax.set_title(title)
 
@@ -218,13 +228,11 @@ class Graph2D:
         return sctr
 
     def scatterPlotCF(self, xVals: Sequence, yVals: Sequence,
-                      cfunction: Callable | ColorFunction = (lambda x, y, z: x + y), cmap: ColorMap = ColorMap.VIRIDIS,
-                      colorBar: bool = False, **kwargs):
+                      cfunction: Callable | ColorFunction = (lambda x, y, z: x + y), cmap: ColorMap = ColorMap.VIRIDIS, **kwargs):
         c = [cfunction(item1, item2, 0) for item1, item2 in zip(xVals, yVals)]
         if len(xVals) == len(yVals):
             sctr = self.ax.scatter(xVals, yVals, cmap=cmap.value, c=c, **kwargs)
-            if colorBar:
-                plt.colorbar(sctr)
+            return sctr
         else:
             raise ValueError(f"Length of both arrays should be same. Lengths - X: {len(xVals)}, Y: {len(yVals)}")
 
@@ -243,22 +251,52 @@ class Graph2D:
         else:
             self.ax.plot(x, y, color)
 
+    def contourPlot(self,
+                    func: Callable[[np.array, np.array], float | int],
+                    xRange: np.array = np.linspace(-10, 10, 100),
+                    yRange: np.array = np.linspace(-10, 10, 100),
+                    cmap: ColorMap | str = ColorMap.VIRIDIS,
+                    fill: bool = False
+                    ):
+        X, Y = np.meshgrid(xRange, yRange)
+        Z = func(X, Y)
+        if fill:
+            c = self.ax.contourf(X, Y, Z, cmap=cmap.value if isinstance(cmap, ColorMap) else cmap)
+        else:
+            c = self.ax.contour(X, Y, Z, cmap=cmap.value if isinstance(cmap, ColorMap) else cmap)
+        return c
+
     def annotate(self, text: str, xy: tuple[float, float]):
         self.ax.annotate(text, xy)
 
-    def addSlider(self, posX: float = None, posY: float = None, sizeX: float = None, sizeY: float = None, label: str = "slider",
+    def addSlider(self, posX: float = None, posY: float = None, sizeX: float = None, sizeY: float = None,
+                  label: str = "slider",
                   min: float | int = 0, max: float | int = 1, initialVal: float | int = 0, stepVal: float | int = 0.1):
         if posX is None:
             posX = 0.55
         if posY is None:
-            posY = 0.8 - (0.1 * self.sliders)
+            posY = 0.8 - (0.1 * self.widgets)
         if sizeX is None:
             sizeX = 0.3
         if sizeY is None:
             sizeY = 0.05
         widgetAxes = self.fig.add_axes((posX, posY, sizeX, sizeY))
-        self.sliders += 1
+        self.widgets += 1
         return Slider(widgetAxes, label, min, max, valinit=initialVal, valstep=stepVal)
+
+    def addButton(self, posX: float = None, posY: float = None, sizeX: float = None, sizeY: float = None,
+                  label: str = "button", color=None, hoverColor=None):
+        if posX is None:
+            posX = 0.55
+        if posY is None:
+            posY = 0.8 - (0.1 * self.widgets)
+        if sizeX is None:
+            sizeX = 0.3
+        if sizeY is None:
+            sizeY = 0.05
+        widgetAxes = self.fig.add_axes((posX, posY, sizeX, sizeY))
+        self.widgets += 1
+        return Button(widgetAxes, label=label, color=color, hovercolor=hoverColor)
 
     @staticmethod
     def showGrid():
@@ -267,6 +305,9 @@ class Graph2D:
     @staticmethod
     def legend(*args, **kwargs):
         plt.legend(*args, **kwargs)
+
+    def imshow(self, *args, **kwargs):
+        self.ax.imshow(*args, **kwargs)
 
     @staticmethod
     def show():
@@ -283,7 +324,7 @@ class Graph3D:
         self.xLim = (-10, 10)
         self.yLim = (-10, 10)
         self.zLim = (-10, 10)
-        self.sliders = 0
+        self.widgets = 0
 
     def clear(self):
         self.ax.cla()
@@ -295,12 +336,14 @@ class Graph3D:
     def addAxesWithWidgets(self):
         self.ax = self.fig.add_subplot(1, 2, 1, projection="3d")
 
-    def addSubplot(self, row: int, col: int, title: str = None):
-        if title is None:
-            title = f"{self.subplots}"
+    def add2DAxes(self, twod: Graph2D) -> Graph2D:
+        twod.setFig(self.fig)
+
+    def addSubplot(self, row: int, col: int, index: int = None, title: str = None):
         self.subplots += 1
-        self.ax = self.fig.add_subplot(row, col, self.subplots, projection='3d')
-        self.ax.set_title(title)
+        self.ax = self.fig.add_subplot(row, col, self.subplots if index is None else index, projection='3d')
+        if title is not None:
+            self.ax.set_title(title)
 
     def setTitle(self, title: str):
         self.ax.set_title(title)
@@ -349,7 +392,8 @@ class Graph3D:
         return self.ax.scatter3D(point.x, point.y, point.z, **kwargs)
 
     def points(self, *points: Vector3, **kwargs):
-        return self.ax.scatter3D([i.x for i in points], [j.y for j in points], [k.z for k in points], **kwargs)
+        sctr = self.ax.scatter3D([i.x for i in points], [j.y for j in points], [k.z for k in points], **kwargs)
+
 
     def linePlot(self, xVals: Sequence, yVals: Sequence, zVals: Sequence, **kwargs):
         if len(xVals) == len(yVals) == len(zVals):
@@ -381,19 +425,34 @@ class Graph3D:
     def annotate(self, text: str, xy: tuple[float, float]):
         self.ax.annotate(text, xy)
 
-    def addSlider(self, posX: float = None, posY: float = None, sizeX: float = None, sizeY: float = None, label: str = "slider",
+    def addSlider(self, posX: float = None, posY: float = None, sizeX: float = None, sizeY: float = None,
+                  label: str = "slider",
                   min: float | int = 0, max: float | int = 1, initialVal: float | int = 0, stepVal: float | int = 0.1):
         if posX is None:
             posX = 0.55
         if posY is None:
-            posY = 0.8 - (0.1 * self.sliders)
+            posY = 0.8 - (0.1 * self.widgets)
         if sizeX is None:
             sizeX = 0.3
         if sizeY is None:
             sizeY = 0.05
         widgetAxes = self.fig.add_axes((posX, posY, sizeX, sizeY))
-        self.sliders += 1
+        self.widgets += 1
         return Slider(widgetAxes, label, min, max, valinit=initialVal, valstep=stepVal)
+
+    def addButton(self, posX: float = None, posY: float = None, sizeX: float = None, sizeY: float = None,
+                  label: str = "button", color=(1, 1, 1), hoverColor=(0.4, 0.4, 0.4)):
+        if posX is None:
+            posX = 0.55
+        if posY is None:
+            posY = 0.8 - (0.1 * self.widgets)
+        if sizeX is None:
+            sizeX = 0.3
+        if sizeY is None:
+            sizeY = 0.05
+        widgetAxes = self.fig.add_axes((posX, posY, sizeX, sizeY))
+        self.widgets += 1
+        return Button(widgetAxes, label=label, color=color, hovercolor=hoverColor)
 
     @staticmethod
     def showGrid():
