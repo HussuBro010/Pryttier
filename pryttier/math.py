@@ -1,7 +1,8 @@
 import math
 from typing import *
-
-from numpy import *
+import builtins
+import numpy as np
+from numpy import sqrt, sin
 from numpy.ma.core import arccos
 
 from pryttier.tools import isDivisibleBy
@@ -31,10 +32,8 @@ def clamp(num: float, low: float, high: float) -> float:
         return high
     return num
 
-
 def sign(num: float) -> int:
     return int(num / abs(num))
-
 
 def factorial(num: int) -> int:
     if num == 0:
@@ -42,15 +41,6 @@ def factorial(num: int) -> int:
     if num == 1:
         return 1
     return num * factorial(num - 1)
-
-
-def binToDec(num: int) -> int:
-    digits = [int(i) for i in list(str(num))]
-    total = 0
-    for j in range(0, len(digits)):
-        total += (2 ** j) * (digits[j])
-    return total
-
 
 def mapRange(value: int | float,
              min1: float,
@@ -85,15 +75,16 @@ def radToDeg(num: float):
 def degToRad(num: float):
     return num * (PI / 180)
 
+def getDigits(num: int):
+    return [int(i) for i in list(str(num))]
 
 class Vector2:
     def __init__(self,
                  x: float | int,
                  y: float | int):
+        self.xy = (x, y)
         self.x = x
         self.y = y
-        self.magnitude = sqrt(self.x * self.x + self.y * self.y)
-
     def __repr__(self) -> str:
         return f"({self.x}, {self.y})"
 
@@ -103,28 +94,29 @@ class Vector2:
     def __sub__(self, other: Self) -> Self:
         return Vector2(self.x - other.x, self.y - other.y)
 
-    def __mul__(self, other: Self | float | int) -> Self:
-        if isinstance(other, float) or isinstance(other, int):
-            return Vector2(self.x * other, self.y * other)
-        elif isinstance(other, Vector2):
-            return Vector2(self.x * other.x, self.y * other.y)
+    def __mul__(self, other: float | int) -> Self:
+        return Vector2(self.x * other, self.y * other)
 
-    def __truediv__(self, other):
-        if isinstance(other, float) or isinstance(other, int):
-            return Vector2(self.x / other, self.y / other)
-        elif isinstance(other, Vector2):
-            return Vector2(self.x / other.x, self.y / other.y)
+    def __truediv__(self, other: float | int):
+        return Vector2(self.x / other, self.y / other)
 
     def __iter__(self):
         return iter([self.x, self.y])
 
+    def magnitude(self):
+        return sqrt(self.x * self.x + self.y * self.y)
+
     def normalize(self) -> Self:
-        return Vector2(self.x / self.magnitude, self.y / self.magnitude)
+        return Vector2(self.x / self.magnitude(), self.y / self.magnitude())
 
     def toInt(self):
         return Vector2(int(self.x), int(self.y))
 
     # ---Class Methods---
+    @classmethod
+    def zero(cls):
+        return Vector2(0, 0)
+
     @classmethod
     def distance(cls, a: Self, b: Self):
         dx = b.x - a.x
@@ -133,7 +125,7 @@ class Vector2:
 
     @classmethod
     def dot(cls, a: Self, b: Self):
-        return a.x * b.x + a.y * b.y
+        return Vector2(a.x * b.x, a.y * b.y)
 
     @classmethod
     def cross(cls, a: Self, b: Self):
@@ -142,8 +134,8 @@ class Vector2:
     @classmethod
     def angleBetween(cls, a: Self, b: Self):
         dotProduct = cls.dot(a, b)
-        magA = a.magnitude
-        magB = b.magnitude
+        magA = a.magnitude()
+        magB = b.magnitude()
         return math.acos(dotProduct / (magA * magB))
 
     @classmethod
@@ -158,10 +150,10 @@ class Vector3:
                  x: float | int,
                  y: float | int,
                  z: float | int):
+        self.xyz = (x, y, z)
         self.x = x
         self.y = y
         self.z = z
-        self.magnitude = sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
 
     def __repr__(self) -> str:
         return f"({self.x}, {self.y}, {self.z})"
@@ -172,27 +164,29 @@ class Vector3:
     def __sub__(self, other: Self) -> Self:
         return Vector3(self.x - other.x, self.y - other.y, self.z - other.z)
 
-    def __mul__(self, other: Self | float | int) -> Self:
-        if isinstance(other, float) or isinstance(other, int):
-            return Vector3(self.x * other, self.y * other, self.z * other)
-        elif isinstance(other, Vector3):
-            return Vector3(self.x * other.x, self.y * other.y, self.z * other.z)
+    def __mul__(self, other: float | int) -> Self:
+        return Vector3(self.x * other, self.y * other, self.z * other)
 
-    def __truediv__(self, other):
-        if isinstance(other, float) or isinstance(other, int):
-            return Vector3(self.x / other, self.y / other, self.z / other)
-        elif isinstance(other, Vector3):
-            return Vector3(self.x / other.x, self.y / other.y, self.z / other.z)
+    def __truediv__(self, other: float | int):
+        return Vector3(self.x / other, self.y / other, self.z / other)
 
     def __iter__(self):
         return iter([self.x, self.y, self.z])
 
+    def magnitude(self):
+        return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
+
     def normalize(self) -> Self:
-        return Vector3(self.x / self.magnitude, self.y / self.magnitude, self.z / self.magnitude)
+        return Vector3(self.x / self.magnitude(), self.y / self.magnitude(), self.z / self.magnitude())
 
     def toInt(self):
         return Vector3(int(self.x), int(self.y), int(self.z))
+
     # ---Class Methods---
+    @classmethod
+    def zero(cls):
+        return Vector3(0, 0, 0)
+
     @classmethod
     def distance(cls, a: Self, b: Self):
         dx = b.x - a.x
@@ -202,7 +196,7 @@ class Vector3:
 
     @classmethod
     def dot(cls, a: Self, b: Self):
-        return a.x * b.x + a.y * b.y + a.z * a.z
+        return Vector3(a.x * b.x, a.y * b.y, a.z * a.z)
 
     @classmethod
     def cross(cls, a: Self, b: Self) -> Self:
@@ -214,8 +208,8 @@ class Vector3:
     @classmethod
     def angleBetween(cls, a: Self, b: Self):
         dotProduct = cls.dot(a, b)
-        magA = a.magnitude
-        magB = b.magnitude
+        magA = a.magnitude()
+        magB = b.magnitude()
         return math.acos(dotProduct / (magA * magB))
 
 
@@ -227,57 +221,111 @@ class Vector3:
         pdz = a.z + v.z * t
         return Vector3(pdx, pdy, pdz)
 
+def closestFromArrayNumber(arr: Sequence[float], num: float | int):
+    def difference(a):
+        return abs(a - num)
+
+    return min(arr, key=difference)
+
+def closestFromArrayVec2(arr: Sequence[Vector2], num: Vector2):
+    def difference(a: Vector2):
+        return Vector2(abs(a.x - num.x), abs(a.y - num.y)).magnitude
+
+    return min(arr, key=difference)
+
+def closestFromArrayVec3(arr: Sequence[Vector3], num: Vector3):
+    def difference(a: Vector3):
+        return Vector3(a.x - num.x, a.y - num.y, a.z - num.z).magnitude
+
+    return min(arr, key=difference)
+
+def arrayToVec2array(arr: Sequence[Sequence[int]]):
+    result = []
+    for i in arr:
+        if len(i) != 2:
+            raise Exception("length has to be 2")
+        else:
+            result.append(Vector2(*i))
+    return result
+
+def arrayToVec3array(arr: Sequence[Sequence[int]]):
+    result = []
+    for i in arr:
+        if len(i) != 3:
+            raise Exception("length has to be 3")
+        else:
+            result.append(Vector3(*i))
+    return result
+
+
 class Matrix:
-    def __init__(self, mat: Sequence[Sequence[int | float]]):
-        self.matrix = array(mat)
-        self.rows = len(self.matrix)
-        self.cols = len(self.matrix[0])
-        self.size = (self.rows, self.cols)
+    def __init__(self, r, c):
+        self.rows = r
+        self.cols = c
+        self.matrix = np.zeros([r, c])
+
+    def set(self, mat: np.ndarray | list[list[int | float]]):
+        matRows = len(mat)
+        matCols = len(mat[0])
+        if matRows == self.rows and matCols == self.cols:
+            self.matrix = mat
+        else:
+            raise ValueError(f"Expected matrix of dimensions ({self.rows}, {self.cols}) but got ({matRows}, {matCols})")
 
     def __repr__(self):
-        return str(self.matrix)
+        txt = [""] #┌┘└┐
+        for i in range(self.rows):
+            row = f"|{[int(self.matrix[i][j]) for j in range(self.cols)]}|\n"
+            row = row.replace("[","").replace("]","").replace(",","")
+            txt.append(row)
+        return "".join(txt)
 
-    def __neg__(self):
-        mat = []
-        for i in self.matrix:
-            mat.append([])
-            for a in i:
-                mat[-1].append(-a)
-        return Matrix(mat)
+    def __getitem__(self, item: tuple[int, int] | int):
+        if type(item) == int:
+            return self.matrix[item]
+        elif type(item) == tuple:
+            return self.matrix[item[0]][item[1]]
 
-    def __add__(self, other: Self):
-        if self.size != other.size:
-            raise ValueError(f"Cannot add matrices with sizes {self.size}, {other.size}")
-        mat = []
-        for i, j in zip(self.matrix, other.matrix):
-            mat.append([])
-            for a, b in zip(i, j):
-                mat[-1].append(a + b)
-        return Matrix(mat)
+    def __setitem__(self, key: tuple[int, int], value: int | float):
+        self.matrix[key[0]][key[1]] = value
 
-    def __sub__(self, other: Self):
-        return self + -other
+    def __invert__(self):
+        newMat = Matrix(self.cols, self.rows)
+        for i in range(self.rows):
+            for j in range(self.cols):
+                newMat[j][i] = self.matrix[i][j]
+        return newMat
 
-    def __mul__(self, other: Self | int | float):
-        if isinstance(other, int) or isinstance(other, float):
-            mat = []
-            for i in self.matrix:
-                mat.append([])
-                for a in i:
-                    mat[-1].append(a * other)
-            return Matrix(mat)
-        if isinstance(other, Matrix):
-            a = self.matrix
-            b = other.matrix
+    def __matmul__(self, other: Self):
+        if self.cols != other.rows:
+            raise TypeError("Number of columns of the first matrix must be equal to number of rows of the second matrix")
+        mat = Matrix(self.rows, other.cols)
+        mat.matrix = np.dot(self.matrix, other.matrix)
+        return mat
 
-            if self.cols != other.rows:
-                raise ValueError(
-                    f"Number of columns of the first matrix (cols: {self.cols}) must be equal to the number of rows of the second matrix (rows: {other.rows})")
+    # Class Methods
+    @classmethod
+    def identity(cls, r, c):
+        mat = Matrix(r, c)
+        for i in range(r):
+            for j in range(c):
+                if i == j: mat.matrix[i][j] = 1
+        return mat
 
-            result = dot(a, b)
 
-            return Matrix(result)
+def matToVec(m: Matrix):
+    if m.cols == 2:
+        return Vector2(float(m[0, 0]), float(m[0, 1]))
+    elif m.cols == 3:
+        return Vector3(float(m[0, 0]), float(m[0, 1]), float(m[0, 2]))
 
-    def swapColsAndRows(self):
-        mat = [[self.matrix[i][j] for i in range(self.rows)] for j in range(self.cols)]
-        return Matrix(mat)
+def vecToMat(v: Vector2 | Vector3):
+    if type(v) == Vector2:
+        mat = Matrix(1, 2)
+        mat.set([[v.x, v.y]])
+    elif type(v) == Vector3:
+        mat = Matrix(1, 3)
+        mat.set([[v.x, v.y, v.z]])
+    else:
+        return None
+    return mat

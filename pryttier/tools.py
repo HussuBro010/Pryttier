@@ -20,9 +20,6 @@ class Infix(object):
 percentOf = Infix(lambda x, y: x / 100 * y)  # checks x% of y
 isDivisibleBy = Infix(lambda x, y: x % y == 0)  # checks if x is divisible by y
 
-# x is the function to apply and y is the iterator for the function to be applied on
-applyTo = Infix(lambda x, y: [x(i) for i in y])
-
 
 def apply(itr: Iterable, func: Callable) -> list:
     return [func(x) for x in itr]
@@ -42,13 +39,8 @@ def chunks(lst: MutableSequence, n: int):
 def findCommonItems(*lsts: list) -> list:
     return list(set(lsts[0]).intersection(*lsts[1:]))
 
-
 def swap(array: list, index1: int, index2: int):
     temp: int = array[index1]
     array[index1] = array[index2]
     array[index2] = temp
 
-
-def listPrint(arr: list, end: str = " "):
-    for i in arr:
-        print(i, end=end)

@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 this_directory = Path(__file__).parent
 
-VERSION = '0.1.3'
+VERSION = '0.1.4'
 DESCRIPTION = 'A Python Tool Package'
 LONG_DESCRIPTION = (this_directory / "README.md").read_text()
 
@@ -19,7 +19,7 @@ setup(
     long_description_content_type="text/markdown",
     long_description=LONG_DESCRIPTION,
     packages=find_packages(),
-    install_requires=['numpy', 'matplotlib', 'pandas', 'multipledispatch'],
+    install_requires=['numpy', 'matplotlib', 'pandas', ''],
     keywords=['python', 'pretty', 'python-utils', 'python-easy', 'graphing', 'math', 'tools', 'colors'],
     classifiers=[
         "Development Status :: 1 - Planning",

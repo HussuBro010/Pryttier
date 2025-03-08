@@ -1,12 +1,15 @@
 # Pryttier
 
+[![Github Repository](https://img.shields.io/badge/Github%20Repository-db6038)](https://github.com/HussuBro010/Pryttier/)
+[![Documentation](https://img.shields.io/badge/Documentation-db7d38)](https://github.com/HussuBro010/Pryttier/wiki)
+[![PyPI](https://img.shields.io/badge/PyPi-dba738)](https://pypi.org/project/pryttier/)
 ### A Python package full of little tools to make code simpler and easier
 
 Pryttier has many functions from custom infix operations to making use of matplotlib easier and efficient
 
 ## Installation
 
-#### Current Latest Version of the package:- 0.1.3
+#### Current Latest Version of the package:- 0.1.4
 
 Run:-
 
@@ -29,11 +32,3 @@ Run:
 ```commandline
 pip install pryttier --upgrade
 ```
-
-## Links
-
-#### [Github Repository](https://github.com/HussuBro010/Pryttier/)
-
-#### [Documentation](https://github.com/HussuBro010/Pryttier/wiki)
-
-#### [PyPI](https://pypi.org/project/pryttier/)
