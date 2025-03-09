@@ -9,7 +9,7 @@ Pryttier has many functions from custom infix operations to making use of matplo
 
 ## Installation
 
-#### Current Latest Version of the package:- 0.1.4
+#### Current Latest Version of the package:- 0.1.5
 
 Run:-
 

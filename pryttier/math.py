@@ -1,9 +1,10 @@
 import math
 from typing import *
-import builtins
+
 import numpy as np
-from numpy import sqrt, sin
+from numpy import sqrt
 from numpy.ma.core import arccos
+from scipy.interpolate import CubicSpline, InterpolatedUnivariateSpline
 
 from pryttier.tools import isDivisibleBy
 
@@ -32,8 +33,10 @@ def clamp(num: float, low: float, high: float) -> float:
         return high
     return num
 
+
 def sign(num: float) -> int:
     return int(num / abs(num))
+
 
 def factorial(num: int) -> int:
     if num == 0:
@@ -41,6 +44,7 @@ def factorial(num: int) -> int:
     if num == 1:
         return 1
     return num * factorial(num - 1)
+
 
 def mapRange(value: int | float,
              min1: float,
@@ -75,8 +79,10 @@ def radToDeg(num: float):
 def degToRad(num: float):
     return num * (PI / 180)
 
+
 def getDigits(num: int):
     return [int(i) for i in list(str(num))]
+
 
 class Vector2:
     def __init__(self,
@@ -85,6 +91,7 @@ class Vector2:
         self.xy = (x, y)
         self.x = x
         self.y = y
+
     def __repr__(self) -> str:
         return f"({self.x}, {self.y})"
 
@@ -144,6 +151,7 @@ class Vector2:
         pdx = a.x + v.x * t
         pdy = a.y + v.y * t
         return Vector2(pdx, pdy)
+
 
 class Vector3:
     def __init__(self,
@@ -212,7 +220,6 @@ class Vector3:
         magB = b.magnitude()
         return math.acos(dotProduct / (magA * magB))
 
-
     @classmethod
     def interpolate(cls, a: Self, b: Self, t: float):
         v = b - a
@@ -221,11 +228,13 @@ class Vector3:
         pdz = a.z + v.z * t
         return Vector3(pdx, pdy, pdz)
 
+
 def closestFromArrayNumber(arr: Sequence[float], num: float | int):
     def difference(a):
         return abs(a - num)
 
     return min(arr, key=difference)
+
 
 def closestFromArrayVec2(arr: Sequence[Vector2], num: Vector2):
     def difference(a: Vector2):
@@ -233,11 +242,13 @@ def closestFromArrayVec2(arr: Sequence[Vector2], num: Vector2):
 
     return min(arr, key=difference)
 
+
 def closestFromArrayVec3(arr: Sequence[Vector3], num: Vector3):
     def difference(a: Vector3):
         return Vector3(a.x - num.x, a.y - num.y, a.z - num.z).magnitude
 
     return min(arr, key=difference)
+
 
 def arrayToVec2array(arr: Sequence[Sequence[int]]):
     result = []
@@ -248,6 +259,7 @@ def arrayToVec2array(arr: Sequence[Sequence[int]]):
             result.append(Vector2(*i))
     return result
 
+
 def arrayToVec3array(arr: Sequence[Sequence[int]]):
     result = []
     for i in arr:
@@ -256,6 +268,91 @@ def arrayToVec3array(arr: Sequence[Sequence[int]]):
         else:
             result.append(Vector3(*i))
     return result
+
+
+def linearInterpolation2D(p1: Vector2, p2: Vector2, t: float):
+    y = p1 + (p2 - p1) * t
+    return y
+
+
+def cubicBezier(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t: float):
+    tMat = Matrix(1, 4)
+    tMat.set([[1, t, t * t, t * t * t]])
+
+    characteristicMat = Matrix(4, 4)
+    characteristicMat.set([
+        [1, 0, 0, 0],
+        [-3, 3, 0, 0],
+        [3, -6, 3, 0],
+        [-1, 3, -3, 1]
+    ])
+
+    pointsMat = Matrix(4, 2)
+    pointsMat.set([
+        [p0.x, p0.y],
+        [p1.x, p1.y],
+        [p2.x, p2.y],
+        [p3.x, p3.y]
+    ])
+
+    return tMat @ characteristicMat @ pointsMat
+
+
+def bernstein_poly(i, n, t):
+    from scipy.special import comb
+    return comb(n, i) * (t ** (n - i)) * (1 - t) ** i
+
+def bezierSpline(points, nTimes=10):
+
+    nPoints = len(points)
+    points = sorted(points, key=lambda p: p.x)
+    xPoints = np.array([p.x for p in points])
+    yPoints = np.array([p.y for p in points])
+
+    t = np.linspace(0.0, 1.0, nTimes)
+
+    polynomial_array = np.array([bernstein_poly(i, nPoints - 1, t) for i in range(0, nPoints)])
+
+    x_new = np.dot(xPoints, polynomial_array)
+    y_new = np.dot(yPoints, polynomial_array)
+
+    return [Vector2(a, b) for a, b in zip(x_new, y_new)]
+
+
+def interpolation(points: Sequence[Vector2], interpolationType: str, res: int):
+    points = sorted(points, key=lambda p: p.x)
+    samples = res * len(points)
+    if interpolationType == "linear":
+        steps = [i / res for i in range(res + 1)]
+        interpolatedPoints = []
+        for i in range(len(points) - 1):
+            for s in steps:
+                interpolatedPoints.append(linearInterpolation2D(points[i], points[i + 1], s))
+        return interpolatedPoints
+    elif interpolationType == "cubic":
+        x, y = zip(*points)
+
+        # Compute the cubic spline
+        spline = CubicSpline(x, y, bc_type='natural')
+
+        # Generate interpolated values
+        x_new = np.linspace(x[0], x[-1], samples)
+        y_new = spline(x_new)
+
+        return [Vector2(a, b) for a, b in zip(x_new, y_new)]
+
+    elif interpolationType == "quadratic":
+        points = sorted(points, key=lambda p: p.x)  # Ensure points are sorted by x
+        x, y = zip(*points)  # Separate x and y components
+
+        # Create a quadratic interpolator
+        quadratic_spline = InterpolatedUnivariateSpline(x, y, k=2)
+
+        # Generate interpolated values
+        x_new = np.linspace(x[0], x[-1], samples)
+        y_new = quadratic_spline(x_new)
+
+        return [Vector2(a, b) for a, b in zip(x_new, y_new)]
 
 
 class Matrix:
@@ -273,10 +370,10 @@ class Matrix:
             raise ValueError(f"Expected matrix of dimensions ({self.rows}, {self.cols}) but got ({matRows}, {matCols})")
 
     def __repr__(self):
-        txt = [""] #┌┘└┐
+        txt = [""]  # ┌┘└┐
         for i in range(self.rows):
             row = f"|{[int(self.matrix[i][j]) for j in range(self.cols)]}|\n"
-            row = row.replace("[","").replace("]","").replace(",","")
+            row = row.replace("[", "").replace("]", "").replace(",", "")
             txt.append(row)
         return "".join(txt)
 
@@ -298,7 +395,8 @@ class Matrix:
 
     def __matmul__(self, other: Self):
         if self.cols != other.rows:
-            raise TypeError("Number of columns of the first matrix must be equal to number of rows of the second matrix")
+            raise TypeError(
+                "Number of columns of the first matrix must be equal to number of rows of the second matrix")
         mat = Matrix(self.rows, other.cols)
         mat.matrix = np.dot(self.matrix, other.matrix)
         return mat
@@ -318,6 +416,7 @@ def matToVec(m: Matrix):
         return Vector2(float(m[0, 0]), float(m[0, 1]))
     elif m.cols == 3:
         return Vector3(float(m[0, 0]), float(m[0, 1]), float(m[0, 2]))
+
 
 def vecToMat(v: Vector2 | Vector3):
     if type(v) == Vector2:

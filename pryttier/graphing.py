@@ -220,6 +220,9 @@ class Graph2D:
         else:
             raise ValueError(f"Length of both arrays should be same. Lengths - X: {len(xVals)}, Y: {len(yVals)}")
 
+    def linePlotFromPoints(self, *points: Vector2, **kwargs):
+        self.linePlot([a.x for a in points], [a.y for a in points], **kwargs)
+
     def scatterPlot(self, xVals: Sequence, yVals: Sequence, **kwargs):
         if len(xVals) == len(yVals):
             sctr = self.ax.scatter(xVals, yVals, **kwargs)
