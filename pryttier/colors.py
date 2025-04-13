@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Self
 
 from pryttier.math import Vector3
+from pryttier.tools import chunks, hex2Dec
 
 
 class RGB:
@@ -65,8 +66,8 @@ def rgbColorGradient(colorA: RGB, colorB: RGB, num: int):
 
     return colors
 
-def rgb2hsl(rgb: RGB):
-    r, g, b = (rgb / 255).rgb
+def rgb2hsl(rgb: RGB | tuple[int, int, int]) -> tuple[int, int, int]:
+    r, g, b = (rgb/255).rgb if type(rgb) == RGB else (rgb[0]/255, rgb[1]/255, rgb[2]/255)
 
     mx = max(r, g, b)
     mn = min(r, g, b)
@@ -95,7 +96,7 @@ def rgb2hsl(rgb: RGB):
     return H, S, L
 
 
-def hsl2rgb(hsl: tuple[int, int, int]):
+def hsl2rgb(hsl: tuple[int, int, int]) -> tuple[int, int, int]:
     h, s, l = hsl
     s /= 100
     l /= 100
@@ -118,6 +119,31 @@ def hsl2rgb(hsl: tuple[int, int, int]):
 
     return round((rgb[0] + m) * 255), round((rgb[1] + m) * 255), round((rgb[2] + m) * 255)
 
+
+def rgb2cmyk(rgb: tuple[int, int, int] | RGB) -> tuple[int, int, int, int]:
+    r, g, b = rgb.rgb if type(rgb) == RGB else rgb
+    r, g, b = r/255, g/255, b/255
+    k = min(1-r, 1-g, 1-b)
+    c = (1-r-k)/(1-k)
+    m = (1-g-k)/(1-k)
+    y = (1-b-k)/(1-k)
+    return int(c*100), int(m*100), int(y*100), int(k*100)
+
+def cmyk2rgb(cmyk: tuple[int, int, int, int]) -> RGB:
+    c, m, y, k = cmyk
+    c, m, y, k = c/100, m/100, y/100, k/100
+    r = 255 * (1-c) * (1-k)
+    g = 255 * (1-m) * (1-k)
+    b = 255 * (1-y) * (1-k)
+    return RGB(int(r), int(g), int(b))
+
+def hex2RGB(col: str):
+    col = col.replace("#", "")
+    hexes = ["".join([a[0], a[1]]) for a in chunks(list(col), 2)]
+    if len(hexes) != 3:
+        raise ValueError("Invalid Color. Format:- #RRGGBB")
+    res = [hex2Dec(a) for a in hexes]
+    return RGB(*res)
 
 class AnsiColor:
     def __init__(self, colorCode: int):

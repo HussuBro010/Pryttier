@@ -477,7 +477,7 @@ def generateFaceColors(graph: Graph3D,
         raise ValueError(f"Graph must be of type {Graph3D.__name__} not {Graph2D.__name__}")
     if not ((graph.xLim == (0, 1)) and (graph.yLim == (0, 1)) and (graph.zLim == (0, 1))):
         raise Exception(f"Graph's axes limits must be (0, 1). Got X:{graph.xLim} Y:{graph.yLim} Z:{graph.zLim}")
-    if type(values) == Sequence[Vector3]:
+    if type(values[0]) == Vector3:
         return [[a.x, a.y, a.z] for a in values]
     if type(values) == tuple:
         if len(values[0]) == len(values[1]) == len(values[2]):

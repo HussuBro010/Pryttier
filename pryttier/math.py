@@ -1,10 +1,11 @@
+import itertools
 import math
+from fractions import Fraction
 from typing import *
 
 import numpy as np
 from numpy import sqrt
 from numpy.ma.core import arccos
-from scipy.interpolate import CubicSpline, InterpolatedUnivariateSpline
 
 from pryttier.tools import isDivisibleBy
 
@@ -72,6 +73,10 @@ def getFactors(num: int):
     return factors
 
 
+def decToFraction(dec: float):
+    return Fraction(dec).limit_denominator()
+
+
 def radToDeg(num: float):
     return num * (180 / PI)
 
@@ -82,6 +87,56 @@ def degToRad(num: float):
 
 def getDigits(num: int):
     return [int(i) for i in list(str(num))]
+
+
+class SampleSpace:
+    """WARNING: Not suitable for large sample spaces"""
+
+    def __init__(self, space: list) -> None:
+        self.space: list = space
+
+    def __repr__(self):
+        return str(self.space).replace("[", "{").replace("]", "}")
+
+    def getIf(self, func: Callable[[Any], bool]) -> list:
+        items = []
+        for i in self.get():
+            if func(i):
+                items.append(i)
+        return items
+
+    def __len__(self) -> int:
+        return len(self.space)
+
+    def get(self) -> list:
+        return self.space
+
+    @classmethod
+    def generate(cls, possibility: list | str, length: int, repeat: bool = True) -> Self:
+        if repeat:
+            combs = list(itertools.product(possibility, repeat=length))
+        else:
+            combs = list(itertools.permutations(possibility, r=length))
+
+        for i in range(len(combs)):
+            isStr = []
+            for j in combs[i]:
+                if type(j) == str:
+                    isStr.append(True)
+                else:
+                    isStr.append(False)
+
+            if all(isStr):
+                combs[i] = "".join(combs[i])
+
+        return SampleSpace(combs)
+
+
+def probability(sampleSpace: SampleSpace, favourable: list):
+    for i in favourable:
+        if i not in sampleSpace.get():
+            return 0
+    return len(favourable) / len(sampleSpace)
 
 
 class Vector2:
@@ -114,15 +169,28 @@ class Vector2:
         return sqrt(self.x * self.x + self.y * self.y)
 
     def normalize(self) -> Self:
+        if self.magnitude() == 0:
+            return Vector2.zero()
         return Vector2(self.x / self.magnitude(), self.y / self.magnitude())
 
     def toInt(self):
         return Vector2(int(self.x), int(self.y))
 
+    def toMat(self):
+        mat = Matrix(2, 1)
+        mat.set([[self.x], [self.y]])
+
+    def toNumpy(self):
+        return np.array([self.x, self.y])
+
     # ---Class Methods---
     @classmethod
     def zero(cls):
         return Vector2(0, 0)
+
+    @classmethod
+    def one(cls):
+        return Vector2(1, 1)
 
     @classmethod
     def distance(cls, a: Self, b: Self):
@@ -185,15 +253,28 @@ class Vector3:
         return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
 
     def normalize(self) -> Self:
+        if self.magnitude() == 0:
+            return Vector3.zero()
         return Vector3(self.x / self.magnitude(), self.y / self.magnitude(), self.z / self.magnitude())
 
     def toInt(self):
         return Vector3(int(self.x), int(self.y), int(self.z))
 
+    def toMat(self):
+        mat = Matrix(3, 1)
+        mat.set([[self.x], [self.y], [self.z]])
+
+    def toNumpy(self):
+        return np.array([self.x, self.y, self.z])
+
     # ---Class Methods---
     @classmethod
     def zero(cls):
         return Vector3(0, 0, 0)
+
+    @classmethod
+    def one(cls):
+        return Vector3(1, 1, 1)
 
     @classmethod
     def distance(cls, a: Self, b: Self):
@@ -204,7 +285,7 @@ class Vector3:
 
     @classmethod
     def dot(cls, a: Self, b: Self):
-        return Vector3(a.x * b.x, a.y * b.y, a.z * a.z)
+        return Vector3(a.x * b.x, a.y * b.y, a.z * b.z)
 
     @classmethod
     def cross(cls, a: Self, b: Self) -> Self:
@@ -227,6 +308,78 @@ class Vector3:
         pdy = a.y + v.y * t
         pdz = a.z + v.z * t
         return Vector3(pdx, pdy, pdz)
+
+
+class Vector4:
+    def __init__(self,
+                 x: float | int,
+                 y: float | int,
+                 z: float | int,
+                 w: float | int = 1, ):
+        self.xyzw = (x, y, z, w)
+        self.xyz = (x, y, z)
+        self.x = x
+        self.y = y
+        self.z = z
+        self.w = w
+
+    def __repr__(self) -> str:
+        return f"({self.x}, {self.y}, {self.z}, {self.z})"
+
+    def __add__(self, other: Self) -> Self:
+        return Vector4(self.x + other.x, self.y + other.y, self.z + other.z, self.w + other.w)
+
+    def __sub__(self, other: Self) -> Self:
+        return Vector4(self.x - other.x, self.y - other.y, self.z - other.z, self.w - other.w)
+
+    def __mul__(self, other: float | int) -> Self:
+        return Vector4(self.x * other, self.y * other, self.z * other, self.w * other)
+
+    def __truediv__(self, other: float | int):
+        return Vector4(self.x / other, self.y / other, self.z / other, self.w * other)
+
+    def __iter__(self):
+        return iter([self.x, self.y, self.z, self.w])
+
+    def magnitude(self):
+        return sqrt(self.x * self.x + self.y * self.y + self.z * self.z + self.w * self.w)
+
+    def normalize(self) -> Self:
+        if self.magnitude() == 0:
+            return Vector4.zero()
+        return Vector4(self.x / self.magnitude(), self.y / self.magnitude(), self.z / self.magnitude(),
+                       self.w / self.magnitude())
+
+    def toInt(self):
+        return Vector4(int(self.x), int(self.y), int(self.z), int(self.w))
+
+    def toMat(self):
+        mat = Matrix(3, 1)
+        mat.set([[self.x], [self.y], [self.z], [self.w]])
+
+    def toNumpy(self):
+        return np.array([self.x, self.y, self.z, self.w])
+
+    # ---Class Methods---
+    @classmethod
+    def zero(cls):
+        return Vector4(0, 0, 0, 0)
+
+    @classmethod
+    def one(cls):
+        return Vector4(1, 1, 1, 1)
+
+    @classmethod
+    def distance(cls, a: Self, b: Self):
+        dx = b.x - a.x
+        dy = b.y - a.y
+        dz = b.z - a.z
+        dw = b.z - a.z
+        return math.sqrt(dx * dx + dy * dy + dz * dz + dw*dw)
+
+    @classmethod
+    def dot(cls, a: Self, b: Self):
+        return Vector4(a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w)
 
 
 def closestFromArrayNumber(arr: Sequence[float], num: float | int):
@@ -270,89 +423,24 @@ def arrayToVec3array(arr: Sequence[Sequence[int]]):
     return result
 
 
-def linearInterpolation2D(p1: Vector2, p2: Vector2, t: float):
-    y = p1 + (p2 - p1) * t
-    return y
+def vec2arrayToArray(arr: Sequence[Vector2]):
+    return [[a.x, a.y] for a in arr]
 
 
-def cubicBezier(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t: float):
-    tMat = Matrix(1, 4)
-    tMat.set([[1, t, t * t, t * t * t]])
-
-    characteristicMat = Matrix(4, 4)
-    characteristicMat.set([
-        [1, 0, 0, 0],
-        [-3, 3, 0, 0],
-        [3, -6, 3, 0],
-        [-1, 3, -3, 1]
-    ])
-
-    pointsMat = Matrix(4, 2)
-    pointsMat.set([
-        [p0.x, p0.y],
-        [p1.x, p1.y],
-        [p2.x, p2.y],
-        [p3.x, p3.y]
-    ])
-
-    return tMat @ characteristicMat @ pointsMat
+def vec3arrayToArray(arr: Sequence[Vector3]):
+    return [[a.x, a.y, a.z] for a in arr]
 
 
-def bernstein_poly(i, n, t):
-    from scipy.special import comb
-    return comb(n, i) * (t ** (n - i)) * (1 - t) ** i
-
-def bezierSpline(points, nTimes=10):
-
-    nPoints = len(points)
-    points = sorted(points, key=lambda p: p.x)
-    xPoints = np.array([p.x for p in points])
-    yPoints = np.array([p.y for p in points])
-
-    t = np.linspace(0.0, 1.0, nTimes)
-
-    polynomial_array = np.array([bernstein_poly(i, nPoints - 1, t) for i in range(0, nPoints)])
-
-    x_new = np.dot(xPoints, polynomial_array)
-    y_new = np.dot(yPoints, polynomial_array)
-
-    return [Vector2(a, b) for a, b in zip(x_new, y_new)]
+def lerp(a, b, t: float):
+    return (1 - t) * a + t * b
 
 
-def interpolation(points: Sequence[Vector2], interpolationType: str, res: int):
-    points = sorted(points, key=lambda p: p.x)
-    samples = res * len(points)
-    if interpolationType == "linear":
-        steps = [i / res for i in range(res + 1)]
-        interpolatedPoints = []
-        for i in range(len(points) - 1):
-            for s in steps:
-                interpolatedPoints.append(linearInterpolation2D(points[i], points[i + 1], s))
-        return interpolatedPoints
-    elif interpolationType == "cubic":
-        x, y = zip(*points)
+def lerp2D(p1: Vector2, p2: Vector2, t: float):
+    return p1 + (p2 - p1) * t
 
-        # Compute the cubic spline
-        spline = CubicSpline(x, y, bc_type='natural')
 
-        # Generate interpolated values
-        x_new = np.linspace(x[0], x[-1], samples)
-        y_new = spline(x_new)
-
-        return [Vector2(a, b) for a, b in zip(x_new, y_new)]
-
-    elif interpolationType == "quadratic":
-        points = sorted(points, key=lambda p: p.x)  # Ensure points are sorted by x
-        x, y = zip(*points)  # Separate x and y components
-
-        # Create a quadratic interpolator
-        quadratic_spline = InterpolatedUnivariateSpline(x, y, k=2)
-
-        # Generate interpolated values
-        x_new = np.linspace(x[0], x[-1], samples)
-        y_new = quadratic_spline(x_new)
-
-        return [Vector2(a, b) for a, b in zip(x_new, y_new)]
+def lerp3D(p1: Vector3, p2: Vector3, t: float):
+    return p1 + (p2 - p1) * t
 
 
 class Matrix:
@@ -401,6 +489,12 @@ class Matrix:
         mat.matrix = np.dot(self.matrix, other.matrix)
         return mat
 
+    def toVec(self):
+        if self.cols == 2:
+            return Vector2(float(self[0, 0]), float(self[0, 1]))
+        elif self.cols == 3:
+            return Vector3(float(self[0, 0]), float(self[0, 1]), float(self[0, 2]))
+
     # Class Methods
     @classmethod
     def identity(cls, r, c):
@@ -409,22 +503,3 @@ class Matrix:
             for j in range(c):
                 if i == j: mat.matrix[i][j] = 1
         return mat
-
-
-def matToVec(m: Matrix):
-    if m.cols == 2:
-        return Vector2(float(m[0, 0]), float(m[0, 1]))
-    elif m.cols == 3:
-        return Vector3(float(m[0, 0]), float(m[0, 1]), float(m[0, 2]))
-
-
-def vecToMat(v: Vector2 | Vector3):
-    if type(v) == Vector2:
-        mat = Matrix(1, 2)
-        mat.set([[v.x, v.y]])
-    elif type(v) == Vector3:
-        mat = Matrix(1, 3)
-        mat.set([[v.x, v.y, v.z]])
-    else:
-        return None
-    return mat
