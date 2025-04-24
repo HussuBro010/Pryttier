@@ -2,12 +2,10 @@ import itertools
 import math
 from fractions import Fraction
 from typing import *
-
+from multipledispatch import dispatch
 import numpy as np
 from numpy import sqrt
 from numpy.ma.core import arccos
-
-from pryttier.tools import isDivisibleBy
 
 PI = 2 * arccos(0)
 Degrees = PI / 180
@@ -67,7 +65,7 @@ def isPrime(n: int) -> bool:
 def getFactors(num: int):
     factors = []
     for i in range(1, num + 1):
-        if num | isDivisibleBy | i:
+        if num % i == 0:
             factors.append(i)
 
     return factors
@@ -143,9 +141,9 @@ class Vector2:
     def __init__(self,
                  x: float | int,
                  y: float | int):
-        self.xy = (x, y)
         self.x = x
         self.y = y
+        self.xy = (self.x, self.y)
 
     def __repr__(self) -> str:
         return f"({self.x}, {self.y})"
@@ -175,6 +173,12 @@ class Vector2:
 
     def toInt(self):
         return Vector2(int(self.x), int(self.y))
+
+    def __round__(self, n=None):
+        return Vector2(round(self.x, n), round(self.y, n))
+
+    def round(self, n=None):
+        return Vector2(round(self.x, n), round(self.y, n))
 
     def toMat(self):
         mat = Matrix(2, 1)
@@ -226,10 +230,10 @@ class Vector3:
                  x: float | int,
                  y: float | int,
                  z: float | int):
-        self.xyz = (x, y, z)
         self.x = x
         self.y = y
         self.z = z
+        self.xyz = (self.x, self.y, self.z)
 
     def __repr__(self) -> str:
         return f"({self.x}, {self.y}, {self.z})"
@@ -259,6 +263,9 @@ class Vector3:
 
     def toInt(self):
         return Vector3(int(self.x), int(self.y), int(self.z))
+
+    def __round__(self, n=None):
+        return Vector3(round(self.x, n), round(self.y, n), round(self.z, n))
 
     def toMat(self):
         mat = Matrix(3, 1)
@@ -308,79 +315,6 @@ class Vector3:
         pdy = a.y + v.y * t
         pdz = a.z + v.z * t
         return Vector3(pdx, pdy, pdz)
-
-
-class Vector4:
-    def __init__(self,
-                 x: float | int,
-                 y: float | int,
-                 z: float | int,
-                 w: float | int = 1, ):
-        self.xyzw = (x, y, z, w)
-        self.xyz = (x, y, z)
-        self.x = x
-        self.y = y
-        self.z = z
-        self.w = w
-
-    def __repr__(self) -> str:
-        return f"({self.x}, {self.y}, {self.z}, {self.z})"
-
-    def __add__(self, other: Self) -> Self:
-        return Vector4(self.x + other.x, self.y + other.y, self.z + other.z, self.w + other.w)
-
-    def __sub__(self, other: Self) -> Self:
-        return Vector4(self.x - other.x, self.y - other.y, self.z - other.z, self.w - other.w)
-
-    def __mul__(self, other: float | int) -> Self:
-        return Vector4(self.x * other, self.y * other, self.z * other, self.w * other)
-
-    def __truediv__(self, other: float | int):
-        return Vector4(self.x / other, self.y / other, self.z / other, self.w * other)
-
-    def __iter__(self):
-        return iter([self.x, self.y, self.z, self.w])
-
-    def magnitude(self):
-        return sqrt(self.x * self.x + self.y * self.y + self.z * self.z + self.w * self.w)
-
-    def normalize(self) -> Self:
-        if self.magnitude() == 0:
-            return Vector4.zero()
-        return Vector4(self.x / self.magnitude(), self.y / self.magnitude(), self.z / self.magnitude(),
-                       self.w / self.magnitude())
-
-    def toInt(self):
-        return Vector4(int(self.x), int(self.y), int(self.z), int(self.w))
-
-    def toMat(self):
-        mat = Matrix(3, 1)
-        mat.set([[self.x], [self.y], [self.z], [self.w]])
-
-    def toNumpy(self):
-        return np.array([self.x, self.y, self.z, self.w])
-
-    # ---Class Methods---
-    @classmethod
-    def zero(cls):
-        return Vector4(0, 0, 0, 0)
-
-    @classmethod
-    def one(cls):
-        return Vector4(1, 1, 1, 1)
-
-    @classmethod
-    def distance(cls, a: Self, b: Self):
-        dx = b.x - a.x
-        dy = b.y - a.y
-        dz = b.z - a.z
-        dw = b.z - a.z
-        return math.sqrt(dx * dx + dy * dy + dz * dz + dw*dw)
-
-    @classmethod
-    def dot(cls, a: Self, b: Self):
-        return Vector4(a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w)
-
 
 def closestFromArrayNumber(arr: Sequence[float], num: float | int):
     def difference(a):
@@ -444,12 +378,20 @@ def lerp3D(p1: Vector3, p2: Vector3, t: float):
 
 
 class Matrix:
-    def __init__(self, r, c):
+
+    @dispatch(int, int)
+    def __init__(self, r: int, c: int) -> None:
         self.rows = r
         self.cols = c
         self.matrix = np.zeros([r, c])
 
-    def set(self, mat: np.ndarray | list[list[int | float]]):
+    @dispatch(list)
+    def __init__(self, mat: np.ndarray | list[list[int | float]]) -> None:
+        self.matrix = mat
+        self.rows = len(mat)
+        self.cols = len(mat[0])
+
+    def set(self, mat: np.ndarray | list[list[int | float]]) -> np.ndarray | ValueError:
         matRows = len(mat)
         matCols = len(mat[0])
         if matRows == self.rows and matCols == self.cols:

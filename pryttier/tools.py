@@ -1,6 +1,9 @@
+import math
 import time
 from functools import partial
+import random
 from typing import *
+from .math import Vector2, Vector3
 
 
 class Infix(object):
@@ -101,4 +104,98 @@ class Card:
             case self.CLOVER:
                 sym = "Clover"
         return f"{num} of {sym}"
+
+# === Random ===
+
+class RandomInt:
+    def __init__(self, start: int, stop: int):
+        self.start = start
+        self.stop = stop
+
+    def get(self):
+        return random.randint(self.start, self.stop)
+
+class RandomFloat:
+    def __init__(self, start: int, stop: int):
+        self.start = start
+        self.stop = stop
+
+    def get(self):
+        return random.uniform(self.start, self.stop)
+
+
+class RandomVec2Int:
+    def __init__(self, xRange: tuple[int, int], yRange: tuple[int, int]):
+        self.xRange = xRange
+        self.yRange = yRange
+
+    def get(self):
+        x = random.randint(self.xRange[0], self.xRange[1])
+        y = random.randint(self.yRange[0], self.yRange[1])
+        return Vector2(x, y)
+
+class RandomVec3Int:
+    def __init__(self, xRange: tuple[int, int], yRange: tuple[int, int], zRange: tuple[int, int]):
+        self.xRange = xRange
+        self.yRange = yRange
+        self.zRange = zRange
+
+    def get(self):
+        x = random.randint(self.xRange[0], self.xRange[1])
+        y = random.randint(self.yRange[0], self.yRange[1])
+        z = random.randint(self.zRange[0], self.zRange[1])
+        return Vector3(x, y, z)
+
+class RandomVec2Float:
+    def __init__(self, xRange: tuple[int | float, int | float], yRange: tuple[int | float, int | float]=None):
+        self.xRange = xRange
+        if yRange is None:
+            self.yRange = xRange
+        else:
+            self.yRange = yRange
+
+    def get(self):
+        x = random.uniform(self.xRange[0], self.xRange[1])
+        y = random.uniform(self.yRange[0], self.yRange[1])
+        return Vector2(x, y)
+
+class RandomVec3Float:
+    def __init__(self, xRange: tuple[int, int], yRange: tuple[int, int] = None, zRange: tuple[int, int] = None):
+        self.xRange = xRange
+        if yRange is None and zRange is None:
+            self.yRange = xRange
+            self.zRange = xRange
+        else:
+            self.yRange = yRange
+            self.zRange = zRange
+
+    def get(self):
+        x = random.uniform(self.xRange[0], self.xRange[1])
+        y = random.uniform(self.yRange[0], self.yRange[1])
+        z = random.uniform(self.zRange[0], self.zRange[1])
+        return Vector3(x, y, z)
+
+class RandomDir2:
+    def __init__(self):
+        self.dir = RandomVec2Float((0, 1))
+    def get(self):
+        return self.dir.get()
+
+class RandomDir3:
+    def __init__(self):
+        self.dir = RandomVec3Float((0, 1))
+    def get(self):
+        return self.dir.get()
+
+class RandomDir2BetweenAngles:
+    def __init__(self, a1: int | float, a2: int | float):
+        self.start = a1
+        self.stop = a2
+
+    def get(self):
+        angle = random.uniform(self.start, self.stop)
+        x = math.cos(angle)
+        y = math.sin(angle)
+        return Vector2(x, y)
+
 

@@ -145,6 +145,14 @@ def hex2RGB(col: str):
     res = [hex2Dec(a) for a in hexes]
     return RGB(*res)
 
+def rgb2Hex(col: RGB | tuple[int, int, int]):
+    r, g, b = col.rgb if type(col) == RGB else col
+    r, g, b = hex(r).replace("0x", ""), hex(g).replace("0x", ""), hex(b).replace("0x", "")
+    r = ("0" * (2-len(r)))+r
+    g = ("0" * (2-len(g)))+g
+    b = ("0" * (2-len(b)))+b
+    return f"#{r}{g:2}{b:2}"
+
 class AnsiColor:
     def __init__(self, colorCode: int):
         self.code = f"\033[{colorCode}m"
